@@ -2,23 +2,26 @@ require("dotenv").config();
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const app = express();
-const connectDB = require("./config/dbConfig");
-const mongoose = require("mongoose");
+const {testConnection, sequelize} = require("./config/dbConfig");
 const cors = require("cors");
 const corsOptions = require("./config/corsOptions");
-const credentials = require("./middleware/credential");
+const credentials = require("./middleware/credential"); 
 const verifyJWT = require("./middleware/verifyJWT");
 const PORT = process.env.PORT || 3500;
+const db=sequelize  
 
-connectDB();
 app.use(credentials);
 app.use(cors(corsOptions));
 
-app.use(express.json());
-app.use(cookieParser());
-
+app.use(express.json()); 
+app.use(cookieParser()); 
+db.sync({force: false}).then(({f}) => {
+  console.log('Database synchronized');
+}).catch((err) => { 
+  console.error('Error synchronizing database:', err);
+});
 // public routes
-app.use("/register", require("./routes/api/register"));
+app.use("/register", require("./routes/api/register")); 
 app.use("/auth", require("./routes/api/auth"));
 app.use("/logout", require("./routes/api/logout"));
 app.use("/refresh", require("./routes/api/refresh"));
@@ -40,7 +43,7 @@ app.use((err, req, res) => {
   res.status(500).send(err.message);
 });
 
-mongoose.connection.once("open", () => {
-  console.log("connected to mongoDB");
-  app.listen(PORT, () => console.log(`server is running on port ${PORT}`));
+app.listen(PORT, async () => {
+    console.log(`Server is running on port ${PORT}`);
+testConnection()
 });
