@@ -7,12 +7,12 @@ const RefreshToken = sequelize.define('refreshToken', {
     type: DataTypes.STRING,
     allowNull: false
   },
-  userId: {
+  user_id: {
     type: DataTypes.UUID,
     allowNull: false
   }
 });
 
-RefreshToken.belongsTo(User, { foreignKey: 'userId' });
+RefreshToken.belongsTo(User, { foreignKey: 'user_id' });
 
 module.exports = RefreshToken;

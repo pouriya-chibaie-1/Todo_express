@@ -3,7 +3,6 @@ const bcrypt = require("bcrypt");
 
 const register = async (req, res) => {
   const { username, password , role } = req.body;
-console.log(username, password)
   if (!username || !password) {
     return res
       .status(400)

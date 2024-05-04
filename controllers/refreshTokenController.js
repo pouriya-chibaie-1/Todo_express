@@ -1,69 +1,62 @@
-const User = require("../models/User");
+const RefreshToken = require("../models/RefreshToken"); // Import your RefreshToken model
 const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
 const handleRefreshToken = async (req, res) => {
-  const refreshToken= req.body.refreshToken
+  // const refreshToken = req.body.refreshToken;
+  const refreshToken = req.cookies.jwt;
   if (!refreshToken) return res.sendStatus(401);
 
+  try {
+    const foundToken = await RefreshToken.findOne({ where: { refreshToken: refreshToken } });
+    if (!foundToken) return res.sendStatus(403);
 
-  const foundUser = await User.findOne({ where: { refreshToken: refreshToken }});
-
-  if (!foundUser) {
-    jwt.verify(
-      refreshToken,
-      process.env.REFRESH_TOKEN_SECRET,
-      async (err, decoded) => {
-        if (err) return;
-
-        const hackedUser = await User.findOne({
-          username: decoded.username,
-        }).exec();
-
-        hackedUser.refreshToken = [];
-        await hackedUser.save();
-      }
-    );
-    return res.sendStatus(403);
-  }
-
-  const newRefreshTokenArray = foundUser.refreshToken.filter(
-    (rt) => rt !== refreshToken
-  );
-
-  jwt.verify(
-    refreshToken,
-    process.env.REFRESH_TOKEN_SECRET,
-    async (err, decoded) => {
+    jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, async (err, decoded) => {
       if (err) {
-        foundUser.refreshToken = [...newRefreshTokenArray];
-        await foundUser.save();
+        await foundToken.destroy(); // Destroy the token if it's invalid
+        return res.sendStatus(403);
       }
 
-      if (err || foundUser.username !== decoded.username)
-        return res.sendStatus(403);
+      const foundUser = await User.findOne({ where: { username: decoded.username } });
+      if (!foundUser) return res.sendStatus(403);
 
-      const roles = Object.values(foundUser.roles);
+      const roles = foundUser.role;
 
+      // Create a new access token
       const accessToken = jwt.sign(
-        {
-          userInfo: { username: decoded.username, roles },
-        },
+        { userInfo: { username: decoded.username, roles } },
         process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: "300s" }
+        { expiresIn: "1d" }
       );
 
+      // Generate a new refresh token
       const newRefreshToken = jwt.sign(
         { username: foundUser.username },
         process.env.REFRESH_TOKEN_SECRET,
         { expiresIn: "1d" }
       );
 
-      foundUser.refreshToken = [...newRefreshTokenArray, newRefreshToken];
-      await foundUser.save();
+      // Delete the used refresh token from the database
+      await foundToken.destroy();
 
-      res.json({ roles, accessToken,newRefreshToken });
-    }
-  );
+      // Create a new refresh token entry in the database
+      await RefreshToken.create({ refreshToken: newRefreshToken, userId: foundUser.userId });
+
+      // Set the new refresh token in the cookie
+      res.cookie("jwt", newRefreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "None",
+        maxAge: 1000 * 60 * 60 * 24,
+      });
+
+      // Respond with roles and the new access token
+      res.json({ roles, accessToken ,newRefreshToken});
+    });
+  } catch (error) {
+    console.error("Error during token refresh:", error);
+    res.sendStatus(500);
+  }
 };
 
 module.exports = { handleRefreshToken };

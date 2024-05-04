@@ -21,6 +21,8 @@ const sequelize = new Sequelize( {
   dialect: 'mysql', // Change this to your database dialect if necessary
   logging: false, // Set to true to log SQL queries 
   password: process.env.DB_PASSWORD,
+  timezone: '+03:30',
+  logging:true
   // define: {
   //   timestamps: true // Disable sequelize's default timestamp fields (createdAt and updatedAt)
   // }
