@@ -1,0 +1,45 @@
+{
+  "permissions": [
+    {
+      "name": "list-role",
+      "faName": "لیست نقش ها",
+      "faDescription": "دسترسی مشاهده لیست تمامی نقش ها"
+    },
+    {
+      "name": "create-role",
+      "faName": "ایجاد نقش",
+      "description": "Write permissions"
+    },
+    {
+      "name": "delete-role",
+      "faName": "حذف نقش",
+      "description": "Delete permissions"
+    },
+    {
+      "name": "update-role",
+      "faName": "ویرایش نقش",
+      "description": "ویرایش نقش"
+    },
+      {
+      "name": "list-admin-comments",
+      "faName": "لیست کامنت های ادمین ها",
+      "faDescription": "دسترسی مشاهده لیست تمامی نقش ها"
+    },
+    {
+      "name": "create-admin-comments",
+      "faName": "ایجاد کامنت برای ادمین ها",
+      "description": "Write permissions"
+    },
+    {
+      "name": "delete-admin-comments",
+      "faName": "حذف کامنت ادمین ها",
+      "description": "Delete permissions"
+    },
+    {
+      "name": "update-admin-comments",
+      "faName": "ویرایش کامنت ادمین ها",
+      "description": "ویرایش کامنت ادمین ها"
+    }
+
+  ]
+}
